@@ -160,7 +160,7 @@ def main(path: str, sort_by: List[str]):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a file at a given path.")
     parser.add_argument("path", type=str, help="the path to the file")
-    parser.add_argument("--sort", nargs='+', type=str, default=METRICS, help="the metric to sort functiony by", choices=METRICS)
+    parser.add_argument("--sort", nargs='+', type=str, default=METRICS, help="the metrics to sort the table by", choices=METRICS)
 
     args = parser.parse_args()
 
