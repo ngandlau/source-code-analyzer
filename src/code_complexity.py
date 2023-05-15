@@ -112,37 +112,33 @@ def sort_function_metrics(
 
 
 def print_pretty_table(function_data: List[Tuple[FunctionName, FunctionMetrics]]):
-    columns = ["function", *FunctionMetrics._fields]
-
     # print table header
-    print(" | ".join(["{:<35}".format(column) for column in columns]))
-    print(" | ".join(["{:<35}".format("-" * 35) for column in columns]))
+    print(" | ".join(["{:<40}".format("function")] + ["{:<21}".format(metric_name) for metric_name in FunctionMetrics._fields]))
+    print(" | ".join(["{:<40}".format("-" * 40)  ] + ["{:<21}".format("-" * 21) for metric_name in FunctionMetrics._fields]))
 
     # print one row per function
     for function_name, function_metrics in function_data:
-        if len(function_name) >= 32:
-            function_name = function_name[:32] + "..."
-        values = (function_name, *function_metrics)
-        print(" | ".join(["{:<35}".format(column) for column in values]))
+        if len(function_name) >= 36:
+            function_name = function_name[:36] + "..."
+        print(" | ".join(["{:<40}".format(function_name)] + ["{:<21}".format(metric_value) for metric_value in function_metrics]))
 
-def analyze_file(path_to_file: Path, sort_by_metric: str):
-        function_metrics = calculate_function_metrics(path_to_file)
+def analyze_file(path: Path, sort_by_metric: str):
+        function_metrics = calculate_function_metrics(path)
         sorted_function_metrics = sort_function_metrics(
             function_metrics=function_metrics,
             sort_by_metric=sort_by_metric
         )
-        
-        print(f"=== {Path(path_to_file).as_posix()} === \n")
+        print(f"=== {path.as_posix()} === \n")
         print_pretty_table(sorted_function_metrics)
         print(f"\n\n")
 
 def analyze_files(path: Path, sort_by_metric: str):
-    if path.is_dir():
-        for file in path.iterdir():
-            analyze_files(file, sort_by_metric)
-    elif path.is_file():
+    if path.is_file():
         if path.suffix == '.py':
             analyze_file(path, sort_by_metric)
+    elif path.is_dir():
+        for file in path.iterdir():
+            analyze_files(file, sort_by_metric)
     else:
         raise FileNotFoundError(f"is {path} empty? it contains neither files nor directories.")
 
