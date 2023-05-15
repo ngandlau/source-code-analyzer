@@ -6,7 +6,7 @@ import astunparse
 import io
 import tokenize
 
-METRICS = ['lines_of_code', 'logical_lines_of_code']
+METRICS = ['lines_of_code', 'logical_lines_of_code', 'function_arguments']
 
 FunctionName = str
 MetricName = str
@@ -50,6 +50,9 @@ def count_logical_lines_of_code(node: ast.AST) -> int:
 
     return lines_of_code - lines_of_docstring - lines_of_comments
 
+def count_number_of_function_arguments(node: ast.AST) -> int:
+    return len(node.args.args)
+
 def calculate_complexity_of_functions(path: str) -> List[Tuple[FunctionName, FunctionMetrics]]:
     source_code = get_source_code(path)
     tree = ast.parse(source_code)
@@ -62,6 +65,7 @@ def calculate_complexity_of_functions(path: str) -> List[Tuple[FunctionName, Fun
             function_metrics = FunctionMetrics(
                 lines_of_code=count_lines_of_code(node),
                 logical_lines_of_code=count_logical_lines_of_code(node),
+                function_arguments=count_number_of_function_arguments(node)
             )
             data.append((function_name, function_metrics))
     
