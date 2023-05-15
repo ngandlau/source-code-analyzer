@@ -1,4 +1,5 @@
-# source-code-analyzer
+# Source Code Analyzer
+
 A CLI tool to analyze the complexity of functions and methods in your source code.
 
 ## How to use it
