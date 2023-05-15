@@ -5,8 +5,9 @@ from collections import namedtuple
 import astunparse
 import io
 import tokenize
+from cognitive_complexity.api import get_cognitive_complexity
 
-METRICS = ['lines_of_code', 'logical_lines_of_code', 'function_arguments']
+METRICS = ['lines_of_code', 'logical_lines_of_code', 'function_arguments', 'cognitive_complexity']
 
 FunctionName = str
 MetricName = str
@@ -65,7 +66,8 @@ def calculate_complexity_of_functions(path: str) -> List[Tuple[FunctionName, Fun
             function_metrics = FunctionMetrics(
                 lines_of_code=count_lines_of_code(node),
                 logical_lines_of_code=count_logical_lines_of_code(node),
-                function_arguments=count_number_of_function_arguments(node)
+                function_arguments=count_number_of_function_arguments(node),
+                cognitive_complexity=get_cognitive_complexity(node),
             )
             data.append((function_name, function_metrics))
     
