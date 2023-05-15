@@ -6,6 +6,7 @@ import astunparse
 import io
 import tokenize
 from cognitive_complexity.api import get_cognitive_complexity
+from pathlib import Path
 
 METRICS = [
     "lines_of_code",
@@ -126,9 +127,11 @@ def print_pretty_table(data: List[Tuple[FunctionName, FunctionMetrics]]):
 
 
 def main(path: str, sort_by_metric: str):
+    print(f"=== {Path(path).name} === \n")
     function_metrics = calculate_function_metrics(path=path)
     sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
     print_pretty_table(sorted_function_metrics)
+    print("\n\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a file at a given path.")
