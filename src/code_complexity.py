@@ -106,7 +106,7 @@ def calculate_function_metrics(
 
 def sort_function_metrics(
     function_metrics: List[Tuple[FunctionName, FunctionMetrics]],
-    sort_by: List[str],
+    sort_by: List[MetricName],
 ) -> List[Tuple[FunctionName, FunctionMetrics]]:
     sorted_function_metrics = sorted(
         function_metrics,
@@ -128,7 +128,7 @@ def print_pretty_table(function_data: List[Tuple[FunctionName, FunctionMetrics]]
         print(" | ".join(["{:<40}".format(function_name)] + ["{:<21}".format(metric_value) for metric_value in function_metrics]))
 
 
-def analyze_file(path: Path, sort_by: List[str]):
+def analyze_file(path: Path, sort_by: List[MetricName]):
     function_metrics = calculate_function_metrics(path)
     sorted_function_metrics = sort_function_metrics(
         function_metrics=function_metrics,
@@ -139,7 +139,7 @@ def analyze_file(path: Path, sort_by: List[str]):
     print(f"\n\n")
 
 
-def analyze_files(path: Path, sort_by: List[str]):
+def analyze_files(path: Path, sort_by: List[MetricName]):
     """
     Analyzes functions in a python file or, recursively, in a directory 
     containing python files.
@@ -153,7 +153,7 @@ def analyze_files(path: Path, sort_by: List[str]):
             analyze_files(file, sort_by)
 
 
-def main(path: str, sort_by: List[str]):
+def main(path: str, sort_by: List[MetricName]):
     analyze_files(Path(path), sort_by)
 
 
