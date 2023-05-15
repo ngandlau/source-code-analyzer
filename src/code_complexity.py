@@ -1,6 +1,6 @@
 import argparse
 import ast
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from collections import namedtuple
 import astunparse
 import io
@@ -9,10 +9,10 @@ from cognitive_complexity.api import get_cognitive_complexity
 from pathlib import Path
 
 METRICS = [
+    "cognitive_complexity",
     "lines_of_code",
     "logical_lines_of_code",
     "function_arguments",
-    "cognitive_complexity",
 ]
 
 FunctionName = str
@@ -22,13 +22,17 @@ FunctionMetrics = namedtuple("FunctionMetrics", " ".join(METRICS))
 
 
 def get_source_code(path: Path) -> str:
+    """Returns the contents of a file as a string."""
     with open(path, "r") as file:
         source_code = file.read()
     return source_code
 
 
 def count_lines_of_code(node: ast.AST) -> int:
-    """Counts a functions lines of code, including comments and docstrings."""
+    """
+    Count a function's Lines of Code (LOC), which includes comments, docstrings,
+    and empty lines.
+    """
     start_line = node.lineno
     end_line = node.end_lineno
     num_lines = end_line - start_line + 1
@@ -36,6 +40,7 @@ def count_lines_of_code(node: ast.AST) -> int:
 
 
 def count_docstring_lines(node: ast.AST) -> int:
+    """Counts a function's number of lines that are part of its docstring"""
     if isinstance(
         node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Module)
     ):
@@ -50,6 +55,7 @@ def count_docstring_lines(node: ast.AST) -> int:
 
 
 def count_comment_lines(node: ast.AST) -> int:
+    """Counts a function's number of lines that are comments."""
     function_source_code = astunparse.unparse(node)
     comment_lines = {
         token.start[0]
@@ -64,8 +70,7 @@ def count_comment_lines(node: ast.AST) -> int:
 def count_logical_lines_of_code(node: ast.AST) -> int:
     """
     Counts a functions lines of code excluding comments and docstrings.
-
-    #TODO: Currently counts an empty line as a logical line of code.
+    Currently counts an empty line as a logical line of code.
     """
     lines_of_code = count_lines_of_code(node)
     lines_of_docstring = count_docstring_lines(node)
@@ -101,11 +106,11 @@ def calculate_function_metrics(
 
 def sort_function_metrics(
     function_metrics: List[Tuple[FunctionName, FunctionMetrics]],
-    sort_by_metric="cognitive_complexity",
+    sort_by: List[str],
 ) -> List[Tuple[FunctionName, FunctionMetrics]]:
     sorted_function_metrics = sorted(
         function_metrics,
-        key=lambda data: getattr(data[1], sort_by_metric),
+        key=lambda data: [getattr(data[1], metric) for metric in sort_by],
         reverse=True
     )
     return sorted_function_metrics
@@ -122,35 +127,40 @@ def print_pretty_table(function_data: List[Tuple[FunctionName, FunctionMetrics]]
             function_name = function_name[:36] + "..."
         print(" | ".join(["{:<40}".format(function_name)] + ["{:<21}".format(metric_value) for metric_value in function_metrics]))
 
-def analyze_file(path: Path, sort_by_metric: str):
-        function_metrics = calculate_function_metrics(path)
-        sorted_function_metrics = sort_function_metrics(
-            function_metrics=function_metrics,
-            sort_by_metric=sort_by_metric
-        )
-        print(f"=== {path.as_posix()} === \n")
-        print_pretty_table(sorted_function_metrics)
-        print(f"\n\n")
 
-def analyze_files(path: Path, sort_by_metric: str):
+def analyze_file(path: Path, sort_by: List[str]):
+    function_metrics = calculate_function_metrics(path)
+    sorted_function_metrics = sort_function_metrics(
+        function_metrics=function_metrics,
+        sort_by=sort_by
+    )
+    print(f"=== {path.as_posix()} === \n")
+    print_pretty_table(sorted_function_metrics)
+    print(f"\n\n")
+
+
+def analyze_files(path: Path, sort_by: List[str]):
+    """
+    Analyzes functions in a python file or, recursively, in a directory 
+    containing python files.
+    """
     if path.is_file():
         if path.suffix == '.py':
-            analyze_file(path, sort_by_metric)
-    elif path.is_dir():
+            analyze_file(path, sort_by)
+
+    if path.is_dir():
         for file in path.iterdir():
-            analyze_files(file, sort_by_metric)
-    else:
-        raise FileNotFoundError(f"is {path} empty? it contains neither files nor directories.")
+            analyze_files(file, sort_by)
 
 
-def main(path: str, sort_by_metric: str):
-    analyze_files(Path(path), sort_by_metric)
+def main(path: str, sort_by: List[str]):
+    analyze_files(Path(path), sort_by)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a file at a given path.")
     parser.add_argument("path", type=str, help="the path to the file")
-    parser.add_argument("--sort", type=str, default="cognitive_complexity", help="the metric to sort functiony by", choices=METRICS)
+    parser.add_argument("--sort", nargs='+', type=str, default=METRICS, help="the metric to sort functiony by", choices=METRICS)
 
     args = parser.parse_args()
 
