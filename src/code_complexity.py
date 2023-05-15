@@ -21,7 +21,7 @@ MetricValue = int
 FunctionMetrics = namedtuple("FunctionMetrics", " ".join(METRICS))
 
 
-def get_source_code(path: str) -> str:
+def get_source_code(path: Path) -> str:
     with open(path, "r") as file:
         source_code = file.read()
     return source_code
@@ -79,9 +79,9 @@ def count_number_of_function_arguments(node: ast.AST) -> int:
 
 
 def calculate_function_metrics(
-    path: str,
+    path_to_file: Path,
 ) -> List[Tuple[FunctionName, FunctionMetrics]]:
-    source_code = get_source_code(path)
+    source_code = get_source_code(path_to_file)
     tree = ast.parse(source_code)
 
     function_data = []
@@ -125,26 +125,30 @@ def print_pretty_table(function_data: List[Tuple[FunctionName, FunctionMetrics]]
         values = (function_name, *function_metrics)
         print(" | ".join(["{:<35}".format(column) for column in values]))
 
+def analyze_file(path_to_file: Path, sort_by_metric: str):
+        function_metrics = calculate_function_metrics(path_to_file)
+        sorted_function_metrics = sort_function_metrics(
+            function_metrics=function_metrics,
+            sort_by_metric=sort_by_metric
+        )
+        
+        print(f"=== {Path(path_to_file).as_posix()} === \n")
+        print_pretty_table(sorted_function_metrics)
+        print(f"\n\n")
+
+def analyze_files(path: Path, sort_by_metric: str):
+    if path.is_dir():
+        for file in path.iterdir():
+            analyze_files(file, sort_by_metric)
+    elif path.is_file():
+        if path.suffix == '.py':
+            analyze_file(path, sort_by_metric)
+    else:
+        raise FileNotFoundError(f"is {path} empty? it contains neither files nor directories.")
+
 
 def main(path: str, sort_by_metric: str):
-    p = Path(path)
-    if p.is_dir():
-        for file in p.iterdir():
-            if file.suffix == ".py":
-                print(f"=== {file.name} === \n")
-                function_metrics = calculate_function_metrics(path=file.as_posix())
-                sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
-                print_pretty_table(sorted_function_metrics)
-                print("\n\n")
-    elif p.is_file():
-        print(f"=== {p.name} === \n")
-        function_metrics = calculate_function_metrics(path=file.as_posix())
-        sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
-        print_pretty_table(sorted_function_metrics)
-        print("\n\n")
-    else:
-        raise FileNotFoundError("'path' needs to be a path to a .py file or path to a directory containing .py files.")
-
+    analyze_files(Path(path), sort_by_metric)
 
 
 if __name__ == "__main__":
