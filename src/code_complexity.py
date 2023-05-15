@@ -111,27 +111,41 @@ def sort_function_metrics(
     return sorted_function_metrics
 
 
-def print_pretty_table(data: List[Tuple[FunctionName, FunctionMetrics]]):
+def print_pretty_table(function_data: List[Tuple[FunctionName, FunctionMetrics]]):
     columns = ["function", *FunctionMetrics._fields]
 
-    # table header
-    print(" | ".join(["{:<20}".format(column) for column in columns]))
+    # print table header
+    print(" | ".join(["{:<35}".format(column) for column in columns]))
+    print(" | ".join(["{:<35}".format("-" * 35) for column in columns]))
 
-    # row of dashes
-    print(" | ".join(["{:<20}".format("-" * 20) for column in columns]))
-
-    # rows
-    for function_name, function_metrics in data:
+    # print one row per function
+    for function_name, function_metrics in function_data:
+        if len(function_name) >= 32:
+            function_name = function_name[:32] + "..."
         values = (function_name, *function_metrics)
-        print(" | ".join(["{:<20}".format(column) for column in values]))
+        print(" | ".join(["{:<35}".format(column) for column in values]))
 
 
 def main(path: str, sort_by_metric: str):
-    print(f"=== {Path(path).name} === \n")
-    function_metrics = calculate_function_metrics(path=path)
-    sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
-    print_pretty_table(sorted_function_metrics)
-    print("\n\n")
+    p = Path(path)
+    if p.is_dir():
+        for file in p.iterdir():
+            if file.suffix == ".py":
+                print(f"=== {file.name} === \n")
+                function_metrics = calculate_function_metrics(path=file.as_posix())
+                sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
+                print_pretty_table(sorted_function_metrics)
+                print("\n\n")
+    elif p.is_file():
+        print(f"=== {p.name} === \n")
+        function_metrics = calculate_function_metrics(path=file.as_posix())
+        sorted_function_metrics = sort_function_metrics(function_metrics, sort_by_metric=sort_by_metric)
+        print_pretty_table(sorted_function_metrics)
+        print("\n\n")
+    else:
+        raise FileNotFoundError("'path' needs to be a path to a .py file or path to a directory containing .py files.")
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a file at a given path.")
