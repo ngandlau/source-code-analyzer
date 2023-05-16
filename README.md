@@ -2,6 +2,15 @@
 
 A CLI tool to analyze the complexity of functions and methods in your source code.
 
+## Setup & Installation
+
+The tool depends only on two external packages: 
+
+```
+astunparse==1.6.3
+cognitive-complexity==1.3.0
+```
+
 ## How to use it
 
 Provide the tool the path to a directory (that contains at least one `.py` file in one of its subdirectories):
